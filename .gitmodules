@@ -1,0 +1,3 @@
+[submodule "smartactors"]
+	path = smartactors
+	url = https://github.com/SmartTools/smartactors.git

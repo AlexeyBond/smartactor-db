@@ -32,4 +32,7 @@ public interface SearchQueryMessage {
     String  getTargetField();
 
     Object getQuery();
+
+    Integer getPageSize();
+    Integer getPageNumber();
 }

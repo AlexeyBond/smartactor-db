@@ -8,6 +8,10 @@ import java.sql.SQLException;
 import java.util.LinkedList;
 import java.util.List;
 
+/**
+ *  Stores a text of SQL statement and list of {@link SQLQueryParameterSetter}'s which should be used on
+ *  {@link PreparedStatement} created using this text.
+ */
 public class QueryStatement {
     StringWriter bodyWriter;
     List<SQLQueryParameterSetter> parameterSetters;
@@ -17,14 +21,28 @@ public class QueryStatement {
         this.parameterSetters = new LinkedList<>();
     }
 
+    /**
+     *  @return Writer where to write statement text.
+     */
     public Writer getBodyWriter() {
         return bodyWriter;
     }
 
+    /**
+     *  Add {@link SQLQueryParameterSetter} to list of setters to be used.
+     *  @param setter setter to add.
+     */
     public void pushParameterSetter(SQLQueryParameterSetter setter) {
         parameterSetters.add(setter);
     }
 
+    /**
+     *  Creates {@link PreparedStatement} ad applies all {@link SQLQueryParameterSetter}'s on it.
+     *
+     *  @param connection database connection to use for statement creation.
+     *  @return created statement.
+     *  @throws SQLException
+     */
     public PreparedStatement compile(Connection connection) throws SQLException {
         PreparedStatement stmt = connection.prepareStatement(this.bodyWriter.toString());
 

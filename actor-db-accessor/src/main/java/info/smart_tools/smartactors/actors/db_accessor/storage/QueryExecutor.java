@@ -7,6 +7,9 @@ import info.smart_tools.smartactors.actors.db_accessor.messages.UpsertQueryMessa
 
 import java.sql.PreparedStatement;
 
+/**
+ *  Executes SQL query statements. Performs implementation-specific actions to get query results.
+ */
 public interface QueryExecutor {
     void executeSearchQuery(PreparedStatement statement,SearchQueryMessage message)
             throws QueryExecutionException;

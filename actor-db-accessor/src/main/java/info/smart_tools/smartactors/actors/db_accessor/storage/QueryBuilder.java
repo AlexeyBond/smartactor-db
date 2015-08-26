@@ -5,6 +5,9 @@ import info.smart_tools.smartactors.actors.db_accessor.messages.DeletionQueryMes
 import info.smart_tools.smartactors.actors.db_accessor.messages.SearchQueryMessage;
 import info.smart_tools.smartactors.actors.db_accessor.messages.UpsertQueryMessage;
 
+/**
+ *  Builds SQL queries from query messages.
+ */
 public interface QueryBuilder {
     QueryStatement buildSearchQuery(SearchQueryMessage message)
             throws QueryBuildException;

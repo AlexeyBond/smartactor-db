@@ -8,4 +8,8 @@ class ConditionsWriterResolverImpl extends ConditionsResolverBase {
     public FieldPath resolveFieldName(String name) throws QueryBuildException {
         return FieldPathImpl.fromString(name);
     }
+
+    {
+        Operators.addAll(this);
+    }
 }

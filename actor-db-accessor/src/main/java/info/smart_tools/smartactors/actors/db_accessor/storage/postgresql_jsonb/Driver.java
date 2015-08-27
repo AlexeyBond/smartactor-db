@@ -5,8 +5,8 @@ import info.smart_tools.smartactors.actors.db_accessor.storage.StorageDriver;
 import info.smart_tools.smartactors.actors.db_accessor.storage.QueryExecutor;
 
 public class Driver implements StorageDriver {
-    private QueryBuilderImpl queryBuilder = null/*new QueryBuilderImpl()*/;
-    private QueryExecutorImpl queryExecutor = null/*new QueryExecutorImpl()*/;
+    private QueryBuilderImpl queryBuilder = new QueryBuilderImpl();
+    private QueryExecutorImpl queryExecutor = new QueryExecutorImpl();
 
     public QueryBuilder getQueryBuilder() {
         return queryBuilder;

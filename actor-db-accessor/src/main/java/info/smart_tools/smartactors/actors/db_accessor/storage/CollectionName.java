@@ -15,9 +15,10 @@ public class CollectionName {
         return this.name;
     }
 
-    public static CollectionName fromString(String name) {
+    public static CollectionName fromString(String name)
+        throws QueryBuildException {
         if(!VALIDATION_PATTERN.matcher(name).matches()) {
-            return null;
+            throw new QueryBuildException("Invalid collection name: "+name);
         }
 
         return new CollectionName(name.toLowerCase());

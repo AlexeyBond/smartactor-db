@@ -4,20 +4,41 @@ import info.smart_tools.smartactors.actors.db_accessor.messages.CreateCollection
 import info.smart_tools.smartactors.actors.db_accessor.messages.DeletionQueryMessage;
 import info.smart_tools.smartactors.actors.db_accessor.messages.SearchQueryMessage;
 import info.smart_tools.smartactors.actors.db_accessor.messages.UpsertQueryMessage;
-import info.smart_tools.smartactors.actors.db_accessor.storage.CollectionName;
-import info.smart_tools.smartactors.actors.db_accessor.storage.QueryStatement;
-import info.smart_tools.smartactors.actors.db_accessor.storage.QueryBuildException;
-import info.smart_tools.smartactors.actors.db_accessor.storage.QueryBuilder;
+import info.smart_tools.smartactors.actors.db_accessor.storage.*;
 import info.smart_tools.smartactors.core.IObject;
 
 import java.io.IOException;
 import java.io.Writer;
+import java.util.HashMap;
+import java.util.Map;
 
 class QueryBuilderImpl implements QueryBuilder {
     private ConditionsWriterResolverImpl conditionsWriterResolver = new ConditionsWriterResolverImpl();
 
     private static final int MAX_PAGE_SIZE = 10000;
     private static final int MIN_PAGE_SIZE = 1;
+
+    private static Map<String,String> indexCreationTemplates = new HashMap<String,String>() {{
+        put("ordered","CREATE INDEX ON %s USING BTREE (%s);\n");
+        put("tags","CREATE INDEX ON %s USING GIN (%s);\n");
+    }};
+
+    private static void writeIndexCreationStatement(QueryStatement queryStatement,CollectionName collectionName,
+                                                    String indexType,FieldPath fieldPath)
+            throws QueryBuildException {
+        String tpl = indexCreationTemplates.get(indexType);
+
+        if(tpl == null) {
+            throw new QueryBuildException("Invalid index type: "+indexType);
+        }
+
+        try {
+            queryStatement.getBodyWriter().write(String.format(tpl,
+                    collectionName.toString(), fieldPath.getSQLRepresentation()));
+        } catch (IOException e) {
+            throw new QueryBuildException("Error while writing index creation statement.",e);
+        }
+    }
 
     public QueryStatement buildSearchQuery(SearchQueryMessage message)
             throws QueryBuildException {
@@ -57,7 +78,25 @@ class QueryBuilderImpl implements QueryBuilder {
 
     public QueryStatement buildCollectionCreationQuery(CreateCollectionQueryMessage message)
             throws QueryBuildException {
-        throw new QueryBuildException("Not implemented.");
+        QueryStatement query = new QueryStatement();
+        CollectionName collectionName = CollectionName.fromString(message.getCollectionName());
+
+        try {
+            Writer writer = query.getBodyWriter();
+            writer.write(String.format("CREATE TABLE %s (%s %s PRIMARY KEY, %s JSONB NOT NULL);\n",
+                    collectionName.toString(),
+                    Schema.ID_COLUMN_NAME,Schema.ID_COLUMN_SQL_TYPE,
+                    Schema.DOCUMENT_COLUMN_NAME));
+
+            for(Map.Entry<String,String> entry : message.getIndexes().entrySet()) {
+                FieldPath field = FieldPathImpl.fromString(entry.getKey());
+                writeIndexCreationStatement(query,collectionName,entry.getValue(),field);
+            }
+        } catch (IOException e) {
+            throw new QueryBuildException("Error while writing collection creation statement.",e);
+        }
+
+        return query;
     }
 
     public QueryStatement buildUpdateQuery(UpsertQueryMessage message)

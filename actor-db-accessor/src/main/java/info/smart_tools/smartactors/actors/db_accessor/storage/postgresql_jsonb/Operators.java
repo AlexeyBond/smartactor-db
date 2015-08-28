@@ -43,6 +43,11 @@ class Operators {
         resolver.addOperator("$lte", formattedCheckWriter("((%s)<=to_json(?)::jsonb)"));
         resolver.addOperator("$gte", formattedCheckWriter("((%s)>=to_json(?)::jsonb)"));
 
+        // ISO 8601 date/time operators
+        /*TODO: Find a way to build an index on date/time field.*/
+        resolver.addOperator("$date-from", formattedCheckWriter("((%s)::text::timestamp>=(?)::timestamp)"));
+        resolver.addOperator("$date-to", formattedCheckWriter("((%s)::text::timestamp<=(?)::timestamp)"));
+
         // Tags operators
         resolver.addOperator("$hasTag", formattedCheckWriter("((%s)??(?))"));
     }

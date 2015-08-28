@@ -19,6 +19,13 @@ public class FieldPathImplTest {
                 String.format("%s#>'{fieldA,fieldB,42,fieldD}'",Schema.DOCUMENT_COLUMN_NAME));
     }
 
+    @Test
+    public void Should_ReturnIdColumnCastedToJSONB_When_DocumentIdFieldNameGiven()
+        throws Exception {
+        assertEquals(FieldPathImpl.fromString("id").getSQLRepresentation(),
+                String.format("to_json(%s)::jsonb",Schema.ID_COLUMN_NAME));
+    }
+
     @Test(expectedExceptions = QueryBuildException.class)
     public void Should_ThrowException_When_NotAllowedCharacterUsed()
             throws Exception {

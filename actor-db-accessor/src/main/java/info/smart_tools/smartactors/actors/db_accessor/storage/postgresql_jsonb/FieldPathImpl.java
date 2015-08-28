@@ -6,10 +6,14 @@ import info.smart_tools.smartactors.actors.db_accessor.storage.QueryBuildExcepti
 class FieldPathImpl implements FieldPath {
     private String path;
 
-    public FieldPathImpl(String[] parts) {
+    private FieldPathImpl(String[] parts) {
         this.path = String.format("%s#>\'{%s}\'",
                 Schema.DOCUMENT_COLUMN_NAME,
                 String.join(",",parts));
+    }
+
+    private FieldPathImpl(String column) {
+        this.path = String.format("to_json(%s)::jsonb",column);
     }
 
     public String getSQLRepresentation() {
@@ -20,6 +24,10 @@ class FieldPathImpl implements FieldPath {
             throws QueryBuildException {
         if(!FieldPath.isValid(path)) {
             throw new QueryBuildException("Invalid field path: "+path);
+        }
+
+        if (path.equals("id")) {
+            return new FieldPathImpl(Schema.ID_COLUMN_NAME);
         }
 
         return new FieldPathImpl(FieldPath.splitParts(path));

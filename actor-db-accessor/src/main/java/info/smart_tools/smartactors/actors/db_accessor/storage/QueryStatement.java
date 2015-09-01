@@ -43,7 +43,7 @@ public class QueryStatement {
      *  @return created statement.
      *  @throws SQLException
      */
-    public PreparedStatement compile(Connection connection) throws SQLException {
+    public PreparedStatement compile(Connection connection) throws SQLException, QueryBuildException {
         PreparedStatement stmt = connection.prepareStatement(this.bodyWriter.toString());
 
         int index = 1;

@@ -9,5 +9,5 @@ import java.sql.SQLException;
  */
 @FunctionalInterface
 public interface SQLQueryParameterSetter {
-    int setParameters(PreparedStatement statement, int firstIndex) throws SQLException;
+    int setParameters(PreparedStatement statement, int firstIndex) throws SQLException, QueryBuildException;
 }

@@ -5,7 +5,9 @@ import info.smart_tools.smartactors.actors.db_accessor.messages.DeletionQueryMes
 import info.smart_tools.smartactors.actors.db_accessor.messages.SearchQueryMessage;
 import info.smart_tools.smartactors.actors.db_accessor.messages.UpsertQueryMessage;
 import info.smart_tools.smartactors.actors.db_accessor.storage.*;
+import info.smart_tools.smartactors.core.FieldName;
 import info.smart_tools.smartactors.core.IObject;
+import info.smart_tools.smartactors.core.ReadValueException;
 
 import java.io.IOException;
 import java.io.Writer;
@@ -101,7 +103,36 @@ class QueryBuilderImpl implements QueryBuilder {
 
     public QueryStatement buildUpdateQuery(UpsertQueryMessage message)
             throws QueryBuildException {
-        throw new QueryBuildException("Not implemented.");
+        QueryStatement query = new QueryStatement();
+
+        try {
+            Writer writer = query.getBodyWriter();
+
+            writer.write("UPDATE test AS tab SET document = docs.document FROM (VALUES");
+
+            for (int i = message.getDocuments().size(); i > 0; --i) {
+                writer.write("(?,?::jsonb)"+((i==1)?"":","));
+            }
+
+            writer.write(") AS docs (id, document) WHERE tab.id = docs.id;");
+
+            query.pushParameterSetter((statement, index) -> {
+                for(IObject document : message.getDocuments()) {
+                    try {
+                        statement.setLong(index++, Long.parseLong(document.getValue(new FieldName("id")).toString()));
+                    } catch (ReadValueException | NullPointerException e) {
+                        throw new QueryBuildException("Error while writing update query statement: could not read document's id.",e);
+                    }
+                    /*TODO: Is it a correct way to get document as JSON?*/
+                    statement.setString(index++,document.toString());
+                }
+                return index;
+            });
+        } catch (IOException e) {
+            throw new QueryBuildException("Error while writing update query statement.",e);
+        }
+
+        return query;
     }
 
     public QueryStatement buildInsertionQuery(UpsertQueryMessage message)

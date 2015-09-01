@@ -105,16 +105,22 @@ class QueryBuilderImpl implements QueryBuilder {
             throws QueryBuildException {
         QueryStatement query = new QueryStatement();
 
+        if (message.getDocuments().size() == 0) {
+            throw new QueryBuildException("Documents list should not be empty for update query.");
+        }
+
         try {
             Writer writer = query.getBodyWriter();
 
-            writer.write("UPDATE test AS tab SET document = docs.document FROM (VALUES");
+            writer.write(String.format("UPDATE %s AS tab SET %s = docs.document FROM (VALUES",
+                    CollectionName.fromString(message.getCollectionName()).toString(),
+                    Schema.DOCUMENT_COLUMN_NAME));
 
             for (int i = message.getDocuments().size(); i > 0; --i) {
                 writer.write("(?,?::jsonb)"+((i==1)?"":","));
             }
 
-            writer.write(") AS docs (id, document) WHERE tab.id = docs.id;");
+            writer.write(String.format(") AS docs (id, document) WHERE tab.%s = docs.id;",Schema.ID_COLUMN_NAME));
 
             query.pushParameterSetter((statement, index) -> {
                 for(IObject document : message.getDocuments()) {

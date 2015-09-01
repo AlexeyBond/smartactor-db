@@ -87,6 +87,10 @@ class QueryExecutorImpl implements QueryExecutor {
             Iterator<IObject> documentsIterator = message.getDocuments().iterator();
 
             while(resultSet.next()) {
+                if (!documentsIterator.hasNext()) {
+                    throw new QueryExecutionException("Database returned too much of generated ids.");
+                }
+
                 IObject document = documentsIterator.next();
 
                 try {

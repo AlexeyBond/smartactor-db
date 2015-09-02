@@ -11,6 +11,11 @@ import java.util.Map;
 public class Conditions {
     private Conditions(){}
 
+    private static void writeDefaultEmptyCondition(QueryStatement query)
+        throws IOException {
+        query.getBodyWriter().write("(true)");
+    }
+
     private static void writeCompositeCondition(String prefix,String postfix,String delimiter,
         QueryStatement query,QueryConditionWriterResolver resolver,
         FieldPath contextFieldPath,Object queryParameter)
@@ -18,14 +23,15 @@ public class Conditions {
         Writer writer = query.getBodyWriter();
 
         try {
-            writer.write(prefix);
-
             if (Map.class.isAssignableFrom(queryParameter.getClass())) {
                 Map<Object, Object> paramAsMap = (Map<Object, Object>) queryParameter;
 
                 if (paramAsMap.size() == 0) {
-                    throw new QueryBuildException("Error: parameter object should not be empty.");
+                    writeDefaultEmptyCondition(query);
+                    return;
                 }
+
+                writer.write(prefix);
 
                 Iterator<Map.Entry<Object, Object>> iterator = paramAsMap.entrySet().iterator();
                 Map.Entry<Object, Object> entry = iterator.next();
@@ -34,18 +40,22 @@ public class Conditions {
                     String key = (String) entry.getKey();
                     resolver.resolve(key).write(query, resolver, contextFieldPath, entry.getValue());
 
-                    entry = iterator.next();
-
-                    if (entry != null) {
-                        writer.write(delimiter);
+                    if(!iterator.hasNext()) {
+                        break;
                     }
+
+                    entry = iterator.next();
+                    writer.write(delimiter);
                 }
             } else if (List.class.isAssignableFrom(queryParameter.getClass())) {
                 List<Object> paramAsList = (List<Object>) queryParameter;
 
                 if (paramAsList.size() == 0) {
-                    throw new QueryBuildException("Error: parameter array should not be empty.");
+                    writeDefaultEmptyCondition(query);
+                    return;
                 }
+
+                writer.write(prefix);
 
                 QueryConditionWriter resolved = resolver.resolve(null);
 
@@ -55,11 +65,12 @@ public class Conditions {
                 while (entry != null) {
                     resolved.write(query, resolver, contextFieldPath, entry);
 
-                    entry = iterator.next();
-
-                    if (entry != null) {
-                        writer.write(delimiter);
+                    if(!iterator.hasNext()) {
+                        break;
                     }
+
+                    entry = iterator.next();
+                    writer.write(delimiter);
                 }
             } else {
                 throw new QueryBuildException("Error: composite node value should be an object or an array.");

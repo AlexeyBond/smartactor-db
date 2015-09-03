@@ -126,7 +126,7 @@ class QueryBuilderImpl implements QueryBuilder {
                 for(IObject document : message.getDocuments()) {
                     try {
                         statement.setLong(index++, Long.parseLong(document.getValue(new FieldName("id")).toString()));
-                    } catch (ReadValueException | NullPointerException e) {
+                    } catch (ReadValueException | NullPointerException | NumberFormatException e) {
                         throw new QueryBuildException("Error while writing update query statement: could not read document's id.",e);
                     }
                     /*TODO: Is it a correct way to get document as JSON?*/
@@ -153,7 +153,7 @@ class QueryBuilderImpl implements QueryBuilder {
                     Schema.DOCUMENT_COLUMN_NAME));
 
             for (int i = message.getDocuments().size(); i > 0; --i) {
-                writer.write(String.format("VALUES(?::jsonb)%s",(i==1)?"":","));
+                writer.write(String.format("(?::jsonb)%s",(i==1)?"":","));
             }
 
             writer.write(String.format(" RETURNING %s AS id;",Schema.ID_COLUMN_NAME));

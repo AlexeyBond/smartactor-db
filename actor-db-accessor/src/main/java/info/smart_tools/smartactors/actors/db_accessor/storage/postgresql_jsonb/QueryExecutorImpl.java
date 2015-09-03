@@ -48,15 +48,11 @@ class QueryExecutorImpl implements QueryExecutor {
         }
     }
 
-    private void justExecuteQuery(PreparedStatement statement)
-            throws SQLException {
-        statement.execute();
-    }
-
     public void executeDeleteQuery(PreparedStatement statement,DeletionQueryMessage message)
             throws QueryExecutionException {
         try {
-            justExecuteQuery(statement);
+            int nDeleted = statement.executeUpdate();
+            /*TODO: Check if all of documents are deleted.*/
         } catch (SQLException e) {
             throw new QueryExecutionException("Deletion query execution failed because of SQL exception.",e);
         }
@@ -65,7 +61,7 @@ class QueryExecutorImpl implements QueryExecutor {
     public void executeCollectionCreationQuery(PreparedStatement statement,CreateCollectionQueryMessage message)
             throws QueryExecutionException {
         try {
-            justExecuteQuery(statement);
+            statement.execute();
         } catch (SQLException e) {
             throw new QueryExecutionException("Collection creation query execution failed because of SQL exception.",e);
         }
@@ -74,7 +70,11 @@ class QueryExecutorImpl implements QueryExecutor {
     public void executeUpdateQuery(PreparedStatement statement,UpsertQueryMessage message)
             throws QueryExecutionException {
         try {
-            justExecuteQuery(statement);
+            int nUpdated = statement.executeUpdate();
+
+            if (nUpdated != message.getDocuments().size()) {
+                throw new QueryExecutionException("Update query failed: wrong count of documents is updated.");
+            }
         } catch (SQLException e) {
             throw new QueryExecutionException("Update query execution failed because of SQL exception.",e);
         }

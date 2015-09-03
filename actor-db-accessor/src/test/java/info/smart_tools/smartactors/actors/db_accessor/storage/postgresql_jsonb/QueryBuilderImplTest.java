@@ -4,6 +4,7 @@ import info.smart_tools.smartactors.actors.db_accessor.messages.CreateCollection
 import info.smart_tools.smartactors.actors.db_accessor.messages.SearchQueryMessage;
 import info.smart_tools.smartactors.actors.db_accessor.messages.UpsertQueryMessage;
 import info.smart_tools.smartactors.actors.db_accessor.storage.CollectionName;
+import info.smart_tools.smartactors.actors.db_accessor.storage.FieldPath;
 import info.smart_tools.smartactors.actors.db_accessor.storage.QueryBuildException;
 import info.smart_tools.smartactors.actors.db_accessor.storage.QueryStatement;
 import org.mockito.stubbing.Answer;
@@ -237,6 +238,13 @@ public class QueryBuilderImplTest {
                                 "SELECT * FROM %s WHERE((true)AND(true))LIMIT(?)OFFSET(?)",
                                 CollectionName.fromString("test").toString()),
                         new Object[]{10,0});
+
+                addValidQuery(makeSearchQueryMessage("test", "{\"fieldA\":{\"$in\":[1,2,\"foo\"]}}", 10, 1),
+                        String.format(
+                                "SELECT * FROM %s WHERE((((%s)in(to_json(?)::jsonb,to_json(?)::jsonb,to_json(?)::jsonb))))LIMIT(?)OFFSET(?)",
+                                CollectionName.fromString("test").toString(),
+                                FieldPathImpl.fromString("fieldA").getSQLRepresentation()),
+                        new Object[]{1,2,"foo",10,0});
 
                 /*Should fail when field operators are used outside of field context.*/
                 addInvalidQuery(makeSearchQueryMessage("test", "{\"$eq\":100}", 10, 1));

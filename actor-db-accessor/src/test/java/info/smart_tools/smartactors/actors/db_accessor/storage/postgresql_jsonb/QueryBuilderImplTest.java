@@ -232,6 +232,12 @@ public class QueryBuilderImplTest {
                                 CollectionName.fromString("test").toString()),
                         new Object[]{10,0});
 
+                addValidQuery(makeSearchQueryMessage("test", "{\"$and\":[],\"$or\":[]}", 10, 1),
+                        String.format(
+                                "SELECT * FROM %s WHERE((true)AND(true))LIMIT(?)OFFSET(?)",
+                                CollectionName.fromString("test").toString()),
+                        new Object[]{10,0});
+
                 /*Should fail when field operators are used outside of field context.*/
                 addInvalidQuery(makeSearchQueryMessage("test", "{\"$eq\":100}", 10, 1));
                 addInvalidQuery(makeSearchQueryMessage("test", "{\"$lt\":100}", 10, 1));
@@ -243,6 +249,8 @@ public class QueryBuilderImplTest {
                 addInvalidQuery(makeSearchQueryMessage("test", "{\"$notTheOperator\":[]}", 10, 1));
                 addInvalidQuery(makeSearchQueryMessage("test", "{\"inv@lidField\":[]}", 10, 1));
                 addInvalidQuery(makeSearchQueryMessage("inv@lidCollectionN@me", "{}", 10, 1));
+
+                addInvalidQuery(makeSearchQueryMessage("test", "{\"$and\":\"notACollection\"}", 10, 1));
         }};
 
         /*COLLECTION CREATION tests*/

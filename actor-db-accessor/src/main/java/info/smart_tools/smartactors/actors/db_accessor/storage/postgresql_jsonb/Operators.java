@@ -90,5 +90,10 @@ class Operators {
 
         // Tags operators
         resolver.addOperator("$hasTag", formattedCheckWriter("((%s)??(?))"));
+
+        // Fulltext search
+        resolver.addOperator("$fulltext", formattedCheckWriter(
+                String.format("(to_tsvector('%s',(%%s)::text))@@(to_tsquery(%s,?))",
+                        Schema.FTS_DICTIONARY,Schema.FTS_DICTIONARY)));
     }
 }

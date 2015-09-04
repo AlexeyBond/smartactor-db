@@ -246,6 +246,15 @@ public class QueryBuilderImplTest {
                                 FieldPathImpl.fromString("fieldA").getSQLRepresentation()),
                         new Object[]{1,2,"foo",10,0});
 
+                addValidQuery(makeSearchQueryMessage("test", "{\"fieldA\":{\"$fulltext\":\"cats & dogs\"}}", 10, 1),
+                        String.format(
+                                "SELECT * FROM %s WHERE(((to_tsvector('%s',(%s)::text))@@(to_tsquery(%s,?))))LIMIT(?)OFFSET(?)",
+                                CollectionName.fromString("test").toString(),
+                                Schema.FTS_DICTIONARY,
+                                FieldPathImpl.fromString("fieldA").getSQLRepresentation(),
+                                Schema.FTS_DICTIONARY),
+                        new Object[]{"cats & dogs",10,0});
+
                 /*Should fail when field operators are used outside of field context.*/
                 addInvalidQuery(makeSearchQueryMessage("test", "{\"$eq\":100}", 10, 1));
                 addInvalidQuery(makeSearchQueryMessage("test", "{\"$lt\":100}", 10, 1));

@@ -23,6 +23,7 @@ class QueryBuilderImpl implements QueryBuilder {
     private static Map<String,String> indexCreationTemplates = new HashMap<String,String>() {{
         put("ordered","CREATE INDEX ON %s USING BTREE (%s);\n");
         put("tags","CREATE INDEX ON %s USING GIN (%s);\n");
+        put("fulltext",String.format("CREATE INDEX ON %%s USING GIN (to_tsvector('%s',(%%s)::text));\n",Schema.FTS_DICTIONARY));
     }};
 
     private static void writeIndexCreationStatement(QueryStatement queryStatement,CollectionName collectionName,

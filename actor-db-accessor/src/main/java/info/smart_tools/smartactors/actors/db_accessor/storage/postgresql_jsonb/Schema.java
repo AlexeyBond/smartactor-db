@@ -5,4 +5,7 @@ class Schema {
     public static final String DOCUMENT_COLUMN_NAME = "document";
 
     public static final String ID_COLUMN_SQL_TYPE = "BIGSERIAL";
+
+    // Dictionary for Full Text Search
+    public static final String FTS_DICTIONARY = "russian";
 }

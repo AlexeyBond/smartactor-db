@@ -1,6 +1,8 @@
 package info.smart_tools.smartactors.actors.db_accessor;
 
 import info.smart_tools.smartactors.actors.db_accessor.messages.*;
+import info.smart_tools.smartactors.actors.db_accessor.storage.QueryStatement;
+import info.smart_tools.smartactors.actors.db_accessor.storage.postgresql_jsonb.Driver;
 import info.smart_tools.smartactors.core.IMessage;
 import info.smart_tools.smartactors.core.actors.Actor;
 import info.smart_tools.smartactors.core.actors.annotations.FromState;
@@ -13,6 +15,7 @@ import java.sql.DriverManager;
 @InitialState("disconnected")
 public class DatabaseAccessActor extends Actor {
     private Connection connection;
+    private Driver storageDriver;
 
     @Handler("connect")
     @FromState("disconnected")
@@ -41,24 +44,60 @@ public class DatabaseAccessActor extends Actor {
     @FromState("connected")
     public void createCollectionHandler(CreateCollectionQueryMessage message) {
         /*TODO: Create collection here.*/
+        try {
+            QueryStatement query = storageDriver.getQueryBuilder().buildCollectionCreationQuery(message);
+            storageDriver.getQueryExecutor().executeCollectionCreationQuery(query.compile(connection), message);
+        } catch (Exception e) {
+
+        }
     }
 
     @Handler("find-documents")
     @FromState("connected")
     public void findDocumentsHandler(SearchQueryMessage message) {
         /*TODO: Perform search.*/
+        try {
+            QueryStatement query = storageDriver.getQueryBuilder().buildSearchQuery(message);
+            storageDriver.getQueryExecutor().executeSearchQuery(query.compile(connection),message);
+        } catch (Exception e) {
+
+        }
     }
 
-    @Handler("upsert-documents")
+    @Handler("update-documents")
     @FromState("connected")
-    public void upsertDocuments(UpsertQueryMessage message) {
-        /*TODO: Upsert (update or insert) document(s).*/
+    public void updateDocuments(UpsertQueryMessage message) {
+        /*TODO: Update document(s).*/
+        try {
+            QueryStatement query = storageDriver.getQueryBuilder().buildUpdateQuery(message);
+            storageDriver.getQueryExecutor().executeUpdateQuery(query.compile(connection), message);
+        } catch (Exception e) {
+
+        }
+    }
+
+    @Handler("insert-documents")
+    @FromState("connected")
+    public void insertDocuments(UpsertQueryMessage message) {
+        /*TODO: Update document(s).*/
+        try {
+            QueryStatement query = storageDriver.getQueryBuilder().buildInsertionQuery(message);
+            storageDriver.getQueryExecutor().executeInsertionQuery(query.compile(connection),message);
+        } catch (Exception e) {
+
+        }
     }
 
     @Handler("delete-documents")
     @FromState("connected")
     public void deleteDocumentsHandler(DeletionQueryMessage message) {
         /*TODO: Delete documents.*/
+        try {
+            QueryStatement query = storageDriver.getQueryBuilder().buildDeleteQuery(message);
+            storageDriver.getQueryExecutor().executeDeleteQuery(query.compile(connection), message);
+        } catch (Exception e) {
+
+        }
     }
 
     @Handler("create-collection")

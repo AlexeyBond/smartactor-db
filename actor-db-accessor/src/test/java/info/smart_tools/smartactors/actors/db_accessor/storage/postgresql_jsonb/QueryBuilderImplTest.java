@@ -1,10 +1,10 @@
 package info.smart_tools.smartactors.actors.db_accessor.storage.postgresql_jsonb;
 
 import info.smart_tools.smartactors.actors.db_accessor.messages.CreateCollectionQueryMessage;
+import info.smart_tools.smartactors.actors.db_accessor.messages.DeletionQueryMessage;
 import info.smart_tools.smartactors.actors.db_accessor.messages.SearchQueryMessage;
 import info.smart_tools.smartactors.actors.db_accessor.messages.UpsertQueryMessage;
 import info.smart_tools.smartactors.actors.db_accessor.storage.CollectionName;
-import info.smart_tools.smartactors.actors.db_accessor.storage.FieldPath;
 import info.smart_tools.smartactors.actors.db_accessor.storage.QueryBuildException;
 import info.smart_tools.smartactors.actors.db_accessor.storage.QueryStatement;
 import org.mockito.stubbing.Answer;
@@ -32,6 +32,7 @@ public class QueryBuilderImplTest {
     private DataProviderForQueryBuilderImplTest<CreateCollectionQueryMessage> createCollectionQueryMessageDataProvider;
     private DataProviderForQueryBuilderImplTest<UpsertQueryMessage> insertQueryMessageDataProvider;
     private DataProviderForQueryBuilderImplTest<UpsertQueryMessage> updateQueryMessageDataProvider;
+    private DataProviderForQueryBuilderImplTest<DeletionQueryMessage> deleteQueryMessageDataProvider;
 
     @BeforeMethod
     public void setUp() throws Exception {
@@ -161,6 +162,30 @@ public class QueryBuilderImplTest {
     public void testInvalidCollectionCreationQueries (CreateCollectionQueryMessage msg)
             throws Exception{
         queryBuilder.buildCollectionCreationQuery(msg).compile(connectionMock);
+    }
+
+    @DataProvider(name = "valid-delete-queries-provider")
+    public Iterator<Object[]> validDeleteQueriesProvider() {
+        return deleteQueryMessageDataProvider.provideValidQueries();
+    }
+
+    @DataProvider(name = "invalid-delete-queries-provider")
+    public Iterator<Object[]> invalidDeleteQueriesProvider() {
+        return deleteQueryMessageDataProvider.provideInvalidQueries();
+    }
+
+    @Test(dataProvider = "valid-delete-queries-provider")
+    public void testValidDeleteQuery(DeletionQueryMessage msg, String expectedSQL, Object[] expectedParams)
+            throws Exception {
+        testStatement(queryBuilder.buildDeleteQuery(msg), expectedSQL, expectedParams);
+    }
+
+    @Test(
+            expectedExceptions = QueryBuildException.class,
+            dataProvider = "invalid-delete-queries-provider")
+    public void testInvalidDeleteQueries (DeletionQueryMessage msg)
+            throws Exception{
+        queryBuilder.buildDeleteQuery(msg).compile(connectionMock);
     }
 
     @BeforeClass
@@ -340,6 +365,22 @@ public class QueryBuilderImplTest {
 
                 addInvalidQuery(makeUpsertMessage("test",jsonsNoId));
                 addInvalidQuery(makeUpsertMessage("test",jsonsBadId));
+            }
+        };
+
+        deleteQueryMessageDataProvider = new DataProviderForQueryBuilderImplTest<DeletionQueryMessage>() {
+            @Override
+            protected void initQueries() throws Exception {
+                Long[] ids1 = new Long[] {1l,10l,432l};
+
+                addValidQuery(
+                        makeDeletionMessage("testCollection", ids1),
+                        String.format("DELETE FROM %s WHERE %s IN (?,?,?)",
+                                CollectionName.fromString("testCollection").toString(),
+                                Schema.ID_COLUMN_NAME),
+                        ids1);
+
+                addInvalidQuery(makeDeletionMessage("testCollection",new Long[]{}));
             }
         };
     }

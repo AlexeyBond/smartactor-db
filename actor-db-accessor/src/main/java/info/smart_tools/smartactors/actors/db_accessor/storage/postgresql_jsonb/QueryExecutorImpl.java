@@ -52,7 +52,10 @@ class QueryExecutorImpl implements QueryExecutor {
             throws QueryExecutionException {
         try {
             int nDeleted = statement.executeUpdate();
-            /*TODO: Check if all of documents are deleted.*/
+
+            if(nDeleted != message.getDocumentIds().size()) {
+                throw new QueryExecutionException("Delete query failed: wrong count of documents is deleted.");
+            }
         } catch (SQLException e) {
             throw new QueryExecutionException("Deletion query execution failed because of SQL exception.",e);
         }

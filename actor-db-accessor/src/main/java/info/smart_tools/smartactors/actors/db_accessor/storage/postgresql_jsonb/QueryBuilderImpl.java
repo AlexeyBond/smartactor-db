@@ -12,6 +12,7 @@ import info.smart_tools.smartactors.core.ReadValueException;
 import java.io.IOException;
 import java.io.Writer;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Map;
 
 class QueryBuilderImpl implements QueryBuilder {
@@ -76,7 +77,37 @@ class QueryBuilderImpl implements QueryBuilder {
 
     public QueryStatement buildDeleteQuery(DeletionQueryMessage message)
             throws QueryBuildException {
-        throw new QueryBuildException("Not implemented.");
+        QueryStatement query = new QueryStatement();
+        CollectionName collectionName = CollectionName.fromString(message.getCollectionName());
+
+        if(message.getDocumentIds().size() == 0) {
+            throw new QueryBuildException("List of id's to delete should not be empty.");
+        }
+
+        try {
+            Writer writer = query.getBodyWriter();
+
+            writer.write(String.format("DELETE FROM %s WHERE %s IN (",
+                    collectionName.toString(),Schema.ID_COLUMN_NAME));
+
+            for (int i = message.getDocumentIds().size(); i > 0; --i) {
+                writer.write("?"+((i==1)?"":","));
+            }
+
+            writer.write(")");
+
+            query.pushParameterSetter((statement, index) -> {
+                for (Long id : message.getDocumentIds()) {
+                    statement.setLong(index++, id);
+                }
+
+                return index;
+            });
+        } catch (IOException e) {
+            throw new QueryBuildException("Error while writing deletion query statement.",e);
+        }
+
+        return query;
     }
 
     public QueryStatement buildCollectionCreationQuery(CreateCollectionQueryMessage message)

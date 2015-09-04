@@ -5,15 +5,13 @@ import com.fasterxml.jackson.annotation.PropertyAccessor;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import info.smart_tools.smartactors.actors.db_accessor.messages.CreateCollectionQueryMessage;
+import info.smart_tools.smartactors.actors.db_accessor.messages.DeletionQueryMessage;
 import info.smart_tools.smartactors.actors.db_accessor.messages.SearchQueryMessage;
 import info.smart_tools.smartactors.actors.db_accessor.messages.UpsertQueryMessage;
 import info.smart_tools.smartactors.core.IObject;
 import info.smart_tools.smartactors.core.impl.SMObject;
 
-import java.util.Iterator;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -83,6 +81,15 @@ abstract class DataProviderForQueryBuilderImplTest<MType> {
 
         when(message.getCollectionName()).thenReturn(collectionName);
         when(message.getDocuments()).thenReturn(documentsAsIObjects);
+
+        return message;
+    }
+
+    protected static DeletionQueryMessage makeDeletionMessage(String collectionName, Long[] identifiers) {
+        DeletionQueryMessage message = mock(DeletionQueryMessage.class);
+
+        when(message.getCollectionName()).thenReturn(collectionName);
+        when(message.getDocumentIds()).thenReturn(Arrays.asList(identifiers));
 
         return message;
     }

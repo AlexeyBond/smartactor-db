@@ -11,6 +11,7 @@ import info.smart_tools.smartactors.core.actors.annotations.InitialState;
 
 import java.sql.Connection;
 import java.sql.DriverManager;
+import java.sql.SQLException;
 
 @InitialState("disconnected")
 public class DatabaseAccessActor extends Actor {
@@ -20,16 +21,16 @@ public class DatabaseAccessActor extends Actor {
     @Handler("connect")
     @FromState("disconnected")
     public void connect(ConnectMessage message) throws Exception {
-        try {
-            this.connectToDatabase(
-                message.getUrl(),
-                message.getUsername(),
-                message.getPassword(),
-                message.getDriver()
-            );
-        } catch (Exception e) {
-            System.out.println("Exception: "+e.toString());
-        }
+        this.connectToDatabase(
+            message.getUrl(),
+            message.getUsername(),
+            message.getPassword(),
+            message.getDriver()
+        );
+
+        storageDriver = new Driver();
+
+        connection.setAutoCommit(false);
 
         become(new State("connected"));
     }
@@ -71,20 +72,32 @@ public class DatabaseAccessActor extends Actor {
         try {
             QueryStatement query = storageDriver.getQueryBuilder().buildUpdateQuery(message);
             storageDriver.getQueryExecutor().executeUpdateQuery(query.compile(connection), message);
-        } catch (Exception e) {
 
+            connection.commit();
+        } catch (Exception e) {
+            try {
+                connection.rollback();
+            } catch (SQLException ee) {
+                /*TODO: Handle.*/
+            }
         }
     }
 
     @Handler("insert-documents")
     @FromState("connected")
     public void insertDocuments(UpsertQueryMessage message) {
-        /*TODO: Update document(s).*/
         try {
             QueryStatement query = storageDriver.getQueryBuilder().buildInsertionQuery(message);
             storageDriver.getQueryExecutor().executeInsertionQuery(query.compile(connection),message);
-        } catch (Exception e) {
 
+            connection.commit();
+        } catch (Exception e) {
+            e.printStackTrace();
+            try {
+                connection.rollback();
+            } catch (SQLException ee) {
+                /**/
+            }
         }
     }
 

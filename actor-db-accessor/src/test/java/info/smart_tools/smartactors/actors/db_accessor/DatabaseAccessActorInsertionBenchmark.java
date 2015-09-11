@@ -1,29 +1,23 @@
 package info.smart_tools.smartactors.actors.db_accessor;
 
-import info.smart_tools.smartactors.actors.db_accessor.messages.ConnectMessage;
 import info.smart_tools.smartactors.actors.db_accessor.messages.UpsertQueryMessage;
 import info.smart_tools.smartactors.core.FieldName;
 import info.smart_tools.smartactors.core.IObject;
 import info.smart_tools.smartactors.core.impl.SMObject;
-import org.openjdk.jmh.Main;
-import org.openjdk.jmh.annotations.*;
+import org.openjdk.jmh.annotations.Benchmark;
+import org.openjdk.jmh.annotations.Measurement;
+import org.openjdk.jmh.annotations.Setup;
 import org.openjdk.jmh.runner.RunnerException;
 
 import java.io.IOException;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.concurrent.TimeUnit;
+import java.util.UUID;
 
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
-@State(Scope.Benchmark)
-@BenchmarkMode(Mode.SingleShotTime)
-@OutputTimeUnit(TimeUnit.MILLISECONDS)
-@Measurement(iterations = 10)
-@Fork(1)
-@Threads(1)
-public class DatabaseAccessActorBenchmark {
-    protected DatabaseAccessActor databaseAccessActor;
+public class DatabaseAccessActorInsertionBenchmark extends DatabaseAccessActorBenchmarkBase {
     protected List<IObject> _10Documents = new LinkedList<>();
     protected List<IObject> _100Documents = new LinkedList<>();
     protected List<IObject> _1000Documents = new LinkedList<>();
@@ -31,27 +25,8 @@ public class DatabaseAccessActorBenchmark {
 
     @Setup
     public void setUp() throws Exception {
-        databaseAccessActor = new DatabaseAccessActor();
-
-        ConnectMessage connectMessage = mock(ConnectMessage.class);
-
-        when(connectMessage.getDriver()).thenReturn("org.postgresql.Driver");
-        when(connectMessage.getUrl()).thenReturn("jdbc:postgresql://localhost:5433/postgres");
-        when(connectMessage.getUsername()).thenReturn("test_user");
-        when(connectMessage.getPassword()).thenReturn("password");
-
-        databaseAccessActor.connect(connectMessage);
-
+        super.setUp();
         produceDocuments();
-    }
-
-    public void insertDocuments(List<IObject> docs) {
-        UpsertQueryMessage upsertQueryMessage = mock(UpsertQueryMessage.class);
-
-        when(upsertQueryMessage.getCollectionName()).thenReturn("testCollection");
-        when(upsertQueryMessage.getDocuments()).thenReturn(docs);
-
-        databaseAccessActor.insertDocuments(upsertQueryMessage);
     }
 
     @Benchmark
@@ -87,12 +62,14 @@ public class DatabaseAccessActorBenchmark {
     }
 
     private void produceDocuments() {
-        FieldName fieldNameA = new FieldName("fieldA");
+        FieldName[] fieldNames = new FieldName[]{new FieldName("fieldA"),new FieldName("fieldB"),new FieldName("fieldC"),new FieldName("fieldD")};
         for (int i = 0; i < 10000; i++) {
             IObject obj = new SMObject();
 
             try {
-                obj.setValue(fieldNameA, "someStringValue");
+                for(FieldName f : fieldNames) {
+                    obj.setValue(f, UUID.randomUUID().toString());
+                }
             } catch (Exception e) {}
 
             if(i < 10) {
@@ -111,7 +88,17 @@ public class DatabaseAccessActorBenchmark {
         }
     }
 
+
+    public void insertDocuments(List<IObject> docs) {
+        UpsertQueryMessage upsertQueryMessage = mock(UpsertQueryMessage.class);
+
+        when(upsertQueryMessage.getCollectionName()).thenReturn("testCollection");
+        when(upsertQueryMessage.getDocuments()).thenReturn(docs);
+
+        databaseAccessActor.insertDocuments(upsertQueryMessage);
+    }
+
     public static void main(String[] args) throws RunnerException, IOException {
-        Main.main(new String[]{DatabaseAccessActorBenchmark.class.getSimpleName()});
+        runBenchmarks(DatabaseAccessActorInsertionBenchmark.class);
     }
 }

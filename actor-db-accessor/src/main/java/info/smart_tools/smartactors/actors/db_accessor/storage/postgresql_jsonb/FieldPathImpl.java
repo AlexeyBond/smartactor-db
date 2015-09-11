@@ -12,8 +12,8 @@ class FieldPathImpl implements FieldPath {
                 String.join(",",parts));
     }
 
-    private FieldPathImpl(String column) {
-        this.path = String.format("to_json(%s)::jsonb",column);
+    private FieldPathImpl(String column,String castFunction) {
+        this.path = String.format("%s(%s)",castFunction,column);
     }
 
     public String getSQLRepresentation() {
@@ -27,7 +27,7 @@ class FieldPathImpl implements FieldPath {
         }
 
         if (path.equals("id")) {
-            return new FieldPathImpl(Schema.ID_COLUMN_NAME);
+            return new FieldPathImpl(Schema.ID_COLUMN_NAME,Schema.ID_TO_JSONB_CAST_FUNCTION);
         }
 
         return new FieldPathImpl(FieldPath.splitParts(path));

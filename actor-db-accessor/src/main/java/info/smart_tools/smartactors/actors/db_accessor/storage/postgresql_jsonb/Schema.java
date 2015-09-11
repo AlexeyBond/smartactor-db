@@ -8,4 +8,7 @@ class Schema {
 
     // Dictionary for Full Text Search
     public static final String FTS_DICTIONARY = "russian";
+
+    // Function for building index on ID field
+    public static final String ID_TO_JSONB_CAST_FUNCTION = "bigint_to_jsonb_immutable";
 }
